@@ -4,7 +4,10 @@ include 'header.php';
 include 'connexion.php';
 
 $json = $_POST['utilisateur'];
+
 $data = json_decode($json);
+
+$nomImage = null;
 
 if (isset($_FILES) && isset($_FILES['image'])) {
 
@@ -17,10 +20,10 @@ if (isset($_FILES) && isset($_FILES['image'])) {
         __DIR__ . "/uploads/" . $nomImage
     );
 }
-
+echo "!isset($data->id)";
 // si c'est une création d'utilisateur
-if (!isset($data->id) || $data->id == null) 
-{
+if (!isset($data->id) || $data->id == null) {
+
     $requete = $connexion->prepare(
         "INSERT INTO utilisateur (nom, prenom, image, mot_de_passe) 
         VALUES (:nom, :prenom, :image, :mot_de_passe)"
@@ -32,22 +35,36 @@ if (!isset($data->id) || $data->id == null)
         ":image" => $nomImage,
         ":mot_de_passe" => $data->mot_de_passe
     ]);
-} 
-else 
-{
-    $requete = $connexion->prepare(
-        "UPDATE utilisateur 
-        SET nom = :nom, prenom = :prenom , image = :image, mot_de_passe =: mot_de_passe 
-        WHERE id = :id "
-    );
+} else {
+    if ($nomImage) {
+        $requete = $connexion->prepare(
+            "UPDATE utilisateur 
+            SET nom = :nom, prenom = :prenom , image = :image, mot_de_passe = :mot_de_passe 
+            WHERE id = :id "
+        );
 
-    $requete->execute([
-        ":nom" => $data->nom,
-        ":prenom" => $data->prenom,
-        ":image" => $nomImage,
-        ":mot_de_passe" => $data->mot_de_passe,
-        ":id" => $data->id
-    ]);
+        $requete->execute([
+            ":nom" => $data->nom,
+            ":prenom" => $data->prenom,
+            ":image" => $nomImage,
+            ":mot_de_passe" => $data->mot_de_passe,
+            ":id" => $data->id
+        ]);
+    }
+    else{
+        $requete = $connexion->prepare(
+            "UPDATE utilisateur 
+            SET nom = :nom, prenom = :prenom ,  mot_de_passe = :mot_de_passe 
+            WHERE id = :id "
+        );
+    
+        $requete->execute([
+            ":nom" => $data->nom,
+            ":prenom" => $data->prenom,
+            ":mot_de_passe" => $data->mot_de_passe,
+            ":id" => $data->id
+        ]);
+    }
 }
 
 // echo json_encode($data);
